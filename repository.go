@@ -8,12 +8,17 @@ import (
 )
 
 type Repository interface {
+	Path() string
 	ResolveRef(string) (string, error)
 	Archive(string, string, string, string) error
 }
 
 type GitRepository struct {
 	path string
+}
+
+func (r *GitRepository) Path() string {
+	return r.path
 }
 
 func (r *GitRepository) ResolveRef(rev string) (string, error) {
