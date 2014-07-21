@@ -14,15 +14,15 @@ type GitRepositoryStore struct {
 	path string
 }
 
-func (d *GitRepositoryStore) GetRepository(path string) (Repository, error) {
+func (s *GitRepositoryStore) GetRepository(path string) (Repository, error) {
 	path = strings.Trim(path, "/")
-	fullPath := d.fullRepoPath(path)
+	fullPath := s.fullRepoPath(path)
 
-	if !d.isGitRepo(fullPath) {
+	if !s.isGitRepo(fullPath) {
 		path = path + "/.git"
-		fullPath = d.fullRepoPath(path)
+		fullPath = s.fullRepoPath(path)
 
-		if !d.isGitRepo(fullPath) {
+		if !s.isGitRepo(fullPath) {
 			return nil, errors.New(path + " is not a path to a git repository")
 		}
 	}
@@ -30,11 +30,11 @@ func (d *GitRepositoryStore) GetRepository(path string) (Repository, error) {
 	return &GitRepository{fullPath}, nil
 }
 
-func (d *GitRepositoryStore) fullRepoPath(path string) string {
-	return d.path + "/" + path
+func (s *GitRepositoryStore) fullRepoPath(path string) string {
+	return s.path + "/" + path
 }
 
-func (d *GitRepositoryStore) isGitRepo(path string) bool {
+func (s *GitRepositoryStore) isGitRepo(path string) bool {
 	refsPath := path + "/refs"
 
 	_, err := os.Stat(refsPath)
