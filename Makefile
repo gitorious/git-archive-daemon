@@ -1,7 +1,10 @@
 all: build
 
-build:
+deps:
+	go get -d
+
+build: deps
 	go build
 
-test:
+test: deps
 	go test
