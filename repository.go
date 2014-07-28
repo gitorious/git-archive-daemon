@@ -17,6 +17,8 @@ type GitRepository struct {
 	path string
 }
 
+var _ Repository = &GitRepository{}
+
 func (r *GitRepository) Path() string {
 	return r.path
 }

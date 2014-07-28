@@ -7,12 +7,14 @@ import (
 )
 
 type RepositoryStore interface {
-	GetRepository(path string) (Repository, error)
+	GetRepository(string) (Repository, error)
 }
 
 type GitRepositoryStore struct {
 	path string
 }
+
+var _ RepositoryStore = &GitRepositoryStore{}
 
 func (s *GitRepositoryStore) GetRepository(path string) (Repository, error) {
 	path = strings.Trim(path, "/")
