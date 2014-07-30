@@ -17,13 +17,7 @@ func main() {
 	)
 	flag.Parse()
 
-	jobs := make(chan *ArchiveJob)
-	results := make(chan *ArchiveJob)
-
-	for n := 0; n < *numWorkers; n++ {
-		go ArchiveWorker(jobs, results, *tmpDir)
-	}
-
+	jobs, results := ArchiveWorkerPool(*numWorkers, *tmpDir)
 	jobs, results = ArchiveCache(jobs, results, *cacheDir)
 
 	requests := make(chan *ArchiveRequest)

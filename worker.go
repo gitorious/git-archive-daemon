@@ -19,3 +19,14 @@ func ArchiveWorker(jobs <-chan *ArchiveJob, completedJobs chan<- *ArchiveJob, tm
 		completedJobs <- job
 	}
 }
+
+func ArchiveWorkerPool(num int, tmpDir string) (chan *ArchiveJob, chan *ArchiveJob) {
+	jobs := make(chan *ArchiveJob)
+	results := make(chan *ArchiveJob)
+
+	for n := 0; n < num; n++ {
+		go ArchiveWorker(jobs, results, tmpDir)
+	}
+
+	return jobs, results
+}
