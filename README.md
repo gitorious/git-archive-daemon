@@ -20,6 +20,8 @@ It utilizes `git archive` tool for actual archive generation.
 
 Currently you need Go development environment to build git-archive-daemon.
 
+The following command will fetch the package and build the binary:
+
     go get gitorious.org/gitorious/git-archive-daemon
 
 ## Usage
