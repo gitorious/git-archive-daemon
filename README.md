@@ -1,6 +1,7 @@
 # git-archive-daemon
 
-git-archive-daemon is an HTTP API for serving archives of git repositories.
+git-archive-daemon is a scalable, high-performance HTTP API for serving
+archives of git repositories.
 
 It utilizes `git archive` tool for actual archive generation.
 
@@ -20,7 +21,8 @@ It utilizes `git archive` tool for actual archive generation.
 
 Currently you need Go development environment to build git-archive-daemon.
 
-The following command will fetch the package and build the binary:
+The following command will fetch the package and build the binary at
+`$GOPATH/bin/git-archive-daemon`:
 
     go get gitorious.org/gitorious/git-archive-daemon
 
