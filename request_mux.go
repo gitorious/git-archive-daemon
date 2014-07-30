@@ -1,39 +1,25 @@
 package main
 
-type Request interface {
-	Job() Job
-	ResultChan() chan interface{}
-}
-
-type Job interface {
-	Hash() string
-	Execute()
-	Result() interface{}
-}
-
-func RequestMux(requests chan Request, jobs chan Job, results chan Job) {
-	queues := make(map[string][]Request)
+func RequestMux(requests chan *ArchiveRequest, jobs chan *ArchiveJob, results chan *ArchiveJob) {
+	queues := make(map[string][]*ArchiveRequest)
 
 	for {
 		select {
 		case request := <-requests:
-			job := request.Job()
-			hash := job.Hash()
-			queues[hash] = append(queues[hash], request)
+			job := request.Job
+			queues[job.Filename] = append(queues[job.Filename], request)
 
-			if len(queues[hash]) == 1 {
+			if len(queues[job.Filename]) == 1 {
 				go func() {
 					jobs <- job
 				}()
 			}
 		case job := <-results:
-			hash := job.Hash()
-
-			for _, request := range queues[hash] {
-				request.ResultChan() <- job.Result()
+			for _, request := range queues[job.Filename] {
+				request.ResultChan <- job.Result
 			}
 
-			delete(queues, hash)
+			delete(queues, job.Filename)
 		}
 	}
 }

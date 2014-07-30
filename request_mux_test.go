@@ -5,60 +5,31 @@ import (
 	"time"
 )
 
-type testRequest struct {
-	text         string
-	result       string
-	resultChan   chan interface{}
-	completeChan chan struct{}
+var jobCompletionChans = make(map[*ArchiveJob]chan struct{})
+
+func newTestRequest(filename string) (*ArchiveRequest, chan struct{}) {
+	job := &ArchiveJob{Filename: filename}
+	ch := make(chan struct{})
+	jobCompletionChans[job] = ch
+
+	return NewArchiveRequest(job), ch
 }
 
-func newTestRequest(text string) *testRequest {
-	return &testRequest{
-		text:         text,
-		resultChan:   make(chan interface{}),
-		completeChan: make(chan struct{}),
+func testWorker(jobs <-chan *ArchiveJob, results chan<- *ArchiveJob) {
+	for job := range jobs {
+		<-jobCompletionChans[job] // block on chan read, closing this channel signals job completion
+		job.Result = &ArchiveResult{Path: "/the/path/" + job.Filename}
+		results <- job
 	}
-}
-
-func (r *testRequest) Job() Job {
-	return r
-}
-
-func (r *testRequest) ResultChan() chan interface{} {
-	return r.resultChan
-}
-
-func (r *testRequest) Hash() string {
-	return r.text
-}
-
-func (r *testRequest) Execute() {
-	<-r.completeChan
-	r.result = r.text + r.text
-}
-
-func (r *testRequest) Result() interface{} {
-	return r.result
-}
-
-func (r *testRequest) completeJob() {
-	// Close the channel. This signals completion of the job to Execute().
-	close(r.completeChan)
 }
 
 func TestRequestMux(t *testing.T) {
-	requests := make(chan Request)
-	jobs := make(chan Job)
-	completedJobs := make(chan Job)
+	requests := make(chan *ArchiveRequest)
+	jobs := make(chan *ArchiveJob)
+	completedJobs := make(chan *ArchiveJob)
 
-	for i := 0; i < 2; i++ {
-		go func() {
-			for job := range jobs {
-				job.Execute()
-				completedJobs <- job
-			}
-		}()
-	}
+	go testWorker(jobs, completedJobs)
+	go testWorker(jobs, completedJobs)
 
 	go RequestMux(requests, jobs, completedJobs)
 
@@ -67,66 +38,66 @@ func TestRequestMux(t *testing.T) {
 	// None of these should block, regardles of the number of workers
 	// processing the jobs queue.
 	// We want to handle unlimited number of requests, groupping them together
-	// by job's unique hash, sending them job's result when it's ready.
+	// by job's filename, sending them job's result when it's ready.
 
-	request1 := newTestRequest("a")
+	request1, jobCompletionChan1 := newTestRequest("file-a")
 	requests <- request1
-	request2 := newTestRequest("b")
+	request2, jobCompletionChan2 := newTestRequest("file-b")
 	requests <- request2
-	request3 := newTestRequest("a")
+	request3, _ := newTestRequest("file-a")
 	requests <- request3
-	request4 := newTestRequest("b")
+	request4, _ := newTestRequest("file-b")
 	requests <- request4
-	request5 := newTestRequest("c")
+	request5, jobCompletionChan5 := newTestRequest("file-c")
 	requests <- request5
-	request6 := newTestRequest("d")
+	request6, _ := newTestRequest("file-d")
 	requests <- request6
 
-	// Finish response generation for request 2. This should return result for
-	// request 2 and 4 as they have the same hash value ("b").
+	// Finish job for request 2. This should return result for
+	// request 2 and 4 as they have the same filename ("file-b").
 
-	request2.completeJob()
+	close(jobCompletionChan2)
 
-	result := <-request2.ResultChan()
-	if result != "bb" {
-		t.Errorf("expected bb, got %v", result)
+	result := <-request2.ResultChan
+	if result.Path != "/the/path/file-b" {
+		t.Errorf(`expected "/the/path/file-b", got %v`, result.Path)
 	}
 
-	result = <-request4.ResultChan()
-	if result != "bb" {
-		t.Errorf("expected bb, got %v", result)
+	result = <-request4.ResultChan
+	if result.Path != "/the/path/file-b" {
+		t.Errorf(`expected "/the/path/file-b", got %v`, result.Path)
 	}
 
-	// Finish response generation for request 1. This should return result for
-	// request 1 and 3 as they have the same hash value ("a").
+	// Finish job for request 1. This should return result for
+	// request 1 and 3 as they have the same filename ("file-a").
 
-	request1.completeJob()
+	close(jobCompletionChan1)
 
-	result = <-request1.ResultChan()
-	if result != "aa" {
-		t.Errorf("expected aa, got %v", result)
+	result = <-request1.ResultChan
+	if result.Path != "/the/path/file-a" {
+		t.Errorf(`expected "/the/path/file-a", got %v`, result.Path)
 	}
 
-	result = <-request3.ResultChan()
-	if result != "aa" {
-		t.Errorf("expected aa, got %v", result)
+	result = <-request3.ResultChan
+	if result.Path != "/the/path/file-a" {
+		t.Errorf(`expected "/the/path/file-a", got %v`, result.Path)
 	}
 
-	// Finish response generation for request 5. This should return result for
-	// request 5 only as its the only one having hash value of "c".
+	// Finish job for request 5. This should return result for
+	// request 5 only as its the only one having filename "file-c".
 
-	request5.completeJob()
+	close(jobCompletionChan5)
 
-	result = <-request5.ResultChan()
-	if result != "cc" {
-		t.Errorf("expected cc, got %v", result)
+	result = <-request5.ResultChan
+	if result.Path != "/the/path/file-c" {
+		t.Errorf(`expected "/the/path/file-c", got %v`, result.Path)
 	}
 
 	// Check that request 6 hasn't been completed yet.
 	// Reading from it's result chan should be blocking.
 
 	select {
-	case <-request6.ResultChan():
+	case <-request6.ResultChan:
 		t.Errorf("request6 shouldn't get any response yet")
 	case <-time.After(time.Millisecond * 1):
 		// we should get here

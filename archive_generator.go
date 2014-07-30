@@ -7,8 +7,7 @@ import (
 
 type ArchiveGenerator struct {
 	repositoryStore RepositoryStore
-	archiveDir      string
-	requestQueue    chan Request
+	requestQueue    chan *ArchiveRequest
 }
 
 func (g *ArchiveGenerator) GenerateArchive(path, ref, prefix, format string) (string, error) {
@@ -22,66 +21,49 @@ func (g *ArchiveGenerator) GenerateArchive(path, ref, prefix, format string) (st
 		return "", REF_NOT_FOUND
 	}
 
-	request := g.newArchiveRequest(repository, path, commit, prefix, format)
+	request := g.newArchiveRequest(repository.Path(), commit, prefix, format)
 	g.requestQueue <- request
+	result := <-request.ResultChan
 
-	result := <-request.ResultChan()
-	archiveResult := result.(*ArchiveResult)
-
-	return archiveResult.Path, archiveResult.Error
+	return result.Path, result.Error
 }
 
-func (g *ArchiveGenerator) newArchiveRequest(repository Repository, relativeRepoPath, commit, prefix, format string) *ArchiveRequest {
-	return &ArchiveRequest{
-		repository:       repository,
-		relativeRepoPath: relativeRepoPath,
-		commit:           commit,
-		prefix:           prefix,
-		format:           format,
-		archiveDir:       g.archiveDir,
-		resultChan:       make(chan interface{}),
-	}
+func (g *ArchiveGenerator) newArchiveRequest(repoPath, commit, prefix, format string) *ArchiveRequest {
+	return NewArchiveRequest(NewArchiveJob(repoPath, commit, prefix, format))
 }
 
 type ArchiveRequest struct {
-	repository       Repository
-	relativeRepoPath string
-	commit           string
-	prefix           string
-	format           string
-	archiveDir       string
-	result           *ArchiveResult
-	resultChan       chan interface{}
+	Job        *ArchiveJob
+	ResultChan chan *ArchiveResult
 }
 
-var _ Request = &ArchiveRequest{}
-var _ Job = &ArchiveRequest{}
-
-func (r *ArchiveRequest) Job() Job {
-	return r
-}
-
-func (r *ArchiveRequest) ResultChan() chan interface{} {
-	return r.resultChan
-}
-
-func (r *ArchiveRequest) Hash() string {
-	data := []byte(r.relativeRepoPath + r.commit + r.prefix)
-	return fmt.Sprintf("%x.%v", sha1.Sum(data), r.format)
-}
-
-func (r *ArchiveRequest) Execute() {
-	outPath := r.archiveDir + "/" + r.Hash()
-
-	if err := r.repository.Archive(r.commit, r.prefix, r.format, outPath); err != nil {
-		r.result = &ArchiveResult{"", err}
-	} else {
-		r.result = &ArchiveResult{outPath, nil}
+func NewArchiveRequest(job *ArchiveJob) *ArchiveRequest {
+	return &ArchiveRequest{
+		Job:        job,
+		ResultChan: make(chan *ArchiveResult),
 	}
 }
 
-func (r *ArchiveRequest) Result() interface{} {
-	return r.result
+type ArchiveJob struct {
+	RepoPath string
+	Commit   string
+	Prefix   string
+	Format   string
+	Filename string
+	Result   *ArchiveResult
+}
+
+func NewArchiveJob(repoPath, commit, prefix, format string) *ArchiveJob {
+	job := &ArchiveJob{
+		RepoPath: repoPath,
+		Commit:   commit,
+		Prefix:   prefix,
+		Format:   format,
+	}
+	data := []byte(repoPath + commit + prefix)
+	job.Filename = fmt.Sprintf("%x.%v", sha1.Sum(data), format)
+
+	return job
 }
 
 type ArchiveResult struct {
