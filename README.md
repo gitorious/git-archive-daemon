@@ -30,11 +30,11 @@ Usage:
 
 Options:
 
-`-r <repos-dir>` - Directory containing git repositories, defaults to "."
-`-c <cache-dir>` - Cache dir for storing archives, defaults to "."
-`-t <tmp-dir>` - Tmp dir for archive generation, defaults to system tmp dir
-`-l <[addr]:port>` -  Address/port to listen on, defaults to 127.0.0.1:5000
-`-w <workers>` - Number of workers, defaults to 10
+* `-r <repos-dir>` - Directory containing git repositories, defaults to "."
+* `-c <cache-dir>` - Cache dir for storing archives, defaults to "."
+* `-t <tmp-dir>` - Tmp dir for archive generation, defaults to system tmp dir
+* `-l <[addr]:port>` -  Address/port to listen on, defaults to 127.0.0.1:5000
+* `-w <workers>` - Number of workers, defaults to 10
 
 Example:
 
@@ -42,11 +42,20 @@ Example:
 
 ### API
 
-    GET /<repo-path>?ref=master&format=tar.gz&prefix=top-dir/
+    GET /<repo-path>[?params]
 
-`ref` - branch/tag name or commit sha
-`format` - tar.gz or zip
-`prefix` - (optional) prepended to each filename in the archive (passed to `git
+Params:
+
+* `ref` - branch/tag name or commit sha
+* `format` - tar.gz or zip
+* `prefix` - (optional) prepended to each filename in the archive (passed to `git
   archive` via `--prefix` option)
-`filename` - (optional) filename for the response, returned in
+* `filename` - (optional) filename for the response, returned in
   `Content-Disposition: attachment` HTTP header.
+
+Example:
+
+    GET /my/project/repo?ref=master&format=tar.gz&prefix=my-project/
+
+This will generate and send tar.gz archive of master branch of repository at
+`<repos-dir>/my/project/repo`.
