@@ -12,7 +12,7 @@ It utilizes `git archive` tool for actual archive generation.
 * *Work pooling* - Archiving is done by workers from a configurable, fixed size
   pool. This allows for putting predictable, limited load on the machine.
 * *Request grouping* - When the archive is not cached then all requests for it
-  are grouped together and they wait for the single archiving job to complete.
+  are grouped together, waitint for the single archiving job to complete.
   This avoids duplicate work and allows git-archive-daemon to handle high
   volume of requests.
 
