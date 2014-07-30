@@ -24,14 +24,13 @@ func testWorker(jobs <-chan *ArchiveJob, results chan<- *ArchiveJob) {
 }
 
 func TestRequestMux(t *testing.T) {
-	requests := make(chan *ArchiveRequest)
 	jobs := make(chan *ArchiveJob)
 	completedJobs := make(chan *ArchiveJob)
 
 	go testWorker(jobs, completedJobs)
 	go testWorker(jobs, completedJobs)
 
-	go RequestMux(requests, jobs, completedJobs)
+	requests := RequestMux(jobs, completedJobs)
 
 	// Send 6 requests (having 4 unique jobs).
 	//

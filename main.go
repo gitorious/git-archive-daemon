@@ -19,10 +19,7 @@ func main() {
 
 	jobs, results := ArchiveWorkerPool(*numWorkers, *tmpDir)
 	jobs, results = ArchiveCache(jobs, results, *cacheDir)
-
-	requests := make(chan *ArchiveRequest)
-	go RequestMux(requests, jobs, results)
-
+	requests := RequestMux(jobs, results)
 	repositoryStore := &GitRepositoryStore{*reposDir}
 	archiveGenerator := &ArchiveGenerator{repositoryStore, requests}
 
