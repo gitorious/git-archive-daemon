@@ -1,0 +1,52 @@
+# git-archive-daemon
+
+git-archive-daemon is an HTTP API for downloading archives of git repositories.
+
+It utilizes `git archive` for actual archive generation.
+
+## Features
+
+* *Laziness* - Archives are generated on demand, when they're requested.
+* *Caching* - Requests for the same combination of tree, prefix and format are
+  served from a disk cache.
+* *Work pooling* - Archiving is done by workers from a configurable, fixed size
+  pool. This allows for fine tuning .....
+* *Request grouping* - When the archive is not cached then all requests for it
+  are grouped together and they wait for the single archiving job to complete.
+  This avoids duplicate work and allows git-archive-daemon to handle high
+  volume of requests.
+
+## Installation
+
+    go get gitorious.org/gitorious/git-archive-daemon
+
+## Usage
+
+### Starting
+
+Usage:
+
+    git-archive-daemon [options]
+
+Options:
+
+`-r <repos-dir>` - Directory containing git repositories, defaults to "."
+`-c <cache-dir>` - Cache dir for storing archives, defaults to "."
+`-t <tmp-dir>` - Tmp dir for archive generation, defaults to system tmp dir
+`-l <[addr]:port>` -  Address/port to listen on, defaults to 127.0.0.1:5000
+`-w <workers>` - Number of workers, defaults to 10
+
+Example:
+
+    git-archive-daemon -r /var/git/repositories -c /var/cache/archives -l :80
+
+### API
+
+    GET /<repo-path>?ref=master&format=tar.gz&prefix=top-dir/
+
+`ref` - branch/tag name or commit sha
+`format` - tar.gz or zip
+`prefix` - (optional) prepended to each filename in the archive (passed to `git
+  archive` via `--prefix` option)
+`filename` - (optional) filename for the response, returned in
+  `Content-Disposition: attachment` HTTP header.
