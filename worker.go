@@ -4,7 +4,7 @@ import "log"
 
 func ArchiveWorker(jobs <-chan *ArchiveJob, completedJobs chan<- *ArchiveJob, tmpDir string) {
 	for job := range jobs {
-		log.Printf("processing job %v...", job)
+		log.Printf("worker: processing job %v...", job)
 
 		outPath := tmpDir + "/" + job.Filename
 		repository := &GitRepository{job.RepoPath}
@@ -15,7 +15,7 @@ func ArchiveWorker(jobs <-chan *ArchiveJob, completedJobs chan<- *ArchiveJob, tm
 			job.Result = &ArchiveResult{outPath, nil}
 		}
 
-		log.Printf("finished job %v", job)
+		log.Printf("worker: finished job %v", job)
 		completedJobs <- job
 	}
 }
