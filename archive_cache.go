@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"os"
 )
@@ -34,8 +35,11 @@ func ArchiveCache(
 				if result.Error == nil {
 					log.Println("cache: saving result for %v", job)
 					cachedPath := fmt.Sprintf("%v/%v", cachePath, job.Filename)
-					os.Rename(result.Path, cachedPath)
-					job.Result = &ArchiveResult{cachedPath, nil}
+					if err := moveFile(result.Path, cachedPath); err != nil {
+						job.Result = &ArchiveResult{"", err}
+					} else {
+						job.Result = &ArchiveResult{cachedPath, nil}
+					}
 				}
 				results <- job
 			}
@@ -43,4 +47,36 @@ func ArchiveCache(
 	}()
 
 	return jobs, results
+}
+
+func moveFile(src, dst string) error {
+	if err := os.Rename(src, dst); err != nil {
+		if err = copyFile(src, dst); err != nil {
+			return err
+		}
+
+		if err = os.Remove(src); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func copyFile(src, dst string) error {
+	sf, err := os.Open(src)
+	if err != nil {
+		return err
+	}
+	defer sf.Close()
+
+	df, err := os.Create(dst)
+	if err != nil {
+		return err
+	}
+	defer df.Close()
+
+	_, err = io.Copy(df, sf)
+
+	return err
 }
