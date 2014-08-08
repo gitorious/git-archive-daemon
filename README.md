@@ -65,3 +65,9 @@ Example:
 
 This will generate and send tar.gz archive of master branch of repository at
 `<repos-dir>/my/project/repo`.
+
+## License
+
+git-archive-daemon is free software licensed under the
+[http://www.gnu.org/licenses/agpl-3.0.html](GNU Affero General Public License).
+git-archive-daemon is developed as part of the Gitorious project.
