@@ -4,9 +4,10 @@ import "log"
 
 func RequestMux(jobs chan *ArchiveJob, results chan *ArchiveJob) chan *ArchiveRequest {
 	requests := make(chan *ArchiveRequest)
-	queues := make(map[string][]*ArchiveRequest)
 
 	go func() {
+		queues := make(map[string][]*ArchiveRequest)
+
 		for {
 			select {
 			case request := <-requests:
