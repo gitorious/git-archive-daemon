@@ -61,10 +61,10 @@ Params:
 
 Example:
 
-    GET /my/project/repo?ref=master&format=tar.gz&prefix=my-project/
+    GET /my-project/repo?ref=master&format=tar.gz&prefix=my-project/
 
 This will generate and send tar.gz archive of master branch of repository at
-`<repos-dir>/my/project/repo`.
+`<repos-dir>/my-project/repo`.
 
 ## License
 
