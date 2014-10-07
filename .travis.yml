@@ -6,3 +6,7 @@ go:
 
 install: make deps
 script: make test
+
+matrix:
+  allow_failures:
+    - go: tip
