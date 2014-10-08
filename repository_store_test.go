@@ -10,6 +10,7 @@ func execCommand(command string) {
 	cmd := exec.Command("bash", "-c", command)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
+	cmd.Run()
 }
 
 func errToBool(err error) bool {
