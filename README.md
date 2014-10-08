@@ -1,5 +1,7 @@
 # git-archive-daemon
 
+[![Build Status](https://travis-ci.org/gitorious/git-archive-daemon.svg?branch=master)](https://travis-ci.org/gitorious/git-archive-daemon)
+
 git-archive-daemon is a scalable, high-performance HTTP API for serving
 archives of git repositories.
 
