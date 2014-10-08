@@ -1,6 +1,7 @@
 package main
 
 import (
+	"os"
 	"os/exec"
 	"strings"
 	"testing"
@@ -8,6 +9,7 @@ import (
 
 func execCommand(command string) string {
 	cmd := exec.Command("bash", "-c", command)
+	cmd.Stderr = os.Stderr
 	output, _ := cmd.Output()
 
 	return strings.Trim(string(output), " \n")
