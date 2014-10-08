@@ -3,6 +3,8 @@ go:
 - 1.3
 - tip
 install: make deps
+before_script:
+  - git --version
 script: make test
 matrix:
   allow_failures:
