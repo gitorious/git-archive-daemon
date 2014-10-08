@@ -3,16 +3,13 @@ package main
 import (
 	"os"
 	"os/exec"
-	"strings"
 	"testing"
 )
 
-func execCommand(command string) string {
+func execCommand(command string) {
 	cmd := exec.Command("bash", "-c", command)
+	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	output, _ := cmd.Output()
-
-	return strings.Trim(string(output), " \n")
 }
 
 func errToBool(err error) bool {
