@@ -43,7 +43,7 @@ func TestGitRepositoryStore_GetRepository(t *testing.T) {
 		repo, err := store.GetRepository(test.repoPath)
 
 		if errToBool(err) != test.error {
-			t.Errorf("expected error to be %v for %v", test.error, test)
+			t.Errorf("expected error to be %v for %v, got %v", test.error, test, err)
 		}
 
 		if err == nil && repo.Path() != test.actualRepoPath {
