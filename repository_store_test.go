@@ -22,7 +22,7 @@ func errToBool(err error) bool {
 }
 
 func TestGitRepositoryStore_GetRepository(t *testing.T) {
-	execCommand("cd fixtures/depot/project-x && pwd && ls -Rla && rm -rf non-bare-repo-a && git clone repo-a.git non-bare-repo-a")
+	execCommand("ln -nsf $PWD fixtures/depot/project-x/non-bare-repo")
 
 	var tests = []struct {
 		repoPath       string
@@ -30,8 +30,8 @@ func TestGitRepositoryStore_GetRepository(t *testing.T) {
 		error          bool
 	}{
 		{"project-x/repo-a.git", "fixtures/depot/project-x/repo-a.git", false},
-		{"project-x/non-bare-repo-a", "fixtures/depot/project-x/non-bare-repo-a/.git", false},
 		{"/project-y/repo-b.git/", "fixtures/depot/project-y/repo-b.git", false},
+		{"project-x/non-bare-repo", "fixtures/depot/project-x/non-bare-repo/.git", false},
 		{"project-x/non-existent.git", "", true},
 		{"project-z/repo-b.git", "", true},
 		{"", "", true},
